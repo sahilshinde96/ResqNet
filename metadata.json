@@ -1,0 +1,8 @@
+{
+  "name": "ResqNet: Community Crisis & Resource Platform",
+  "description": "A centralized, real-time crisis management system for incident reporting, resource tracking, and community alerts.",
+  "requestFramePermissions": [
+    "geolocation",
+    "microphone"
+  ]
+}
