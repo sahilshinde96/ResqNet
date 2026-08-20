@@ -3,18 +3,23 @@ import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { UserRole } from '../types';
 
+import { playEmergencySiren } from '../utils/audio';
+
 interface Props {
   role: UserRole;
+  onTriggerSOS?: () => void;
 }
 
-const Sidebar: React.FC<Props> = ({ role }) => {
+const Sidebar: React.FC<Props> = ({ role, onTriggerSOS }) => {
   const [isSOSActive, setIsSOSActive] = useState(false);
 
   const triggerSOS = () => {
     setIsSOSActive(true);
-    // In a real app, this would ping authorities immediately
+    playEmergencySiren();
+    if (onTriggerSOS) onTriggerSOS();
     setTimeout(() => setIsSOSActive(false), 5000);
   };
+
 
   const links = [
     { to: '/', label: 'Overview', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },

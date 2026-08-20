@@ -14,10 +14,12 @@ interface Props {
   alerts: Alert[];
   user: User;
   onUpdateIncidentStatus: (id: string, status: IncidentStatus) => void;
+  onAddIncident?: (incident: Incident) => void;
   language: Language;
 }
 
-const Dashboard: React.FC<Props> = ({ incidents, resources, alerts, user, onUpdateIncidentStatus, language }) => {
+const Dashboard: React.FC<Props> = ({ incidents, resources, alerts, user, onUpdateIncidentStatus, onAddIncident, language }) => {
+
   const [translatedAlerts, setTranslatedAlerts] = useState<Alert[]>([]);
   const [translatedIncidents, setTranslatedIncidents] = useState<Incident[]>([]);
   const [isTranslating, setIsTranslating] = useState(false);
@@ -106,8 +108,26 @@ const Dashboard: React.FC<Props> = ({ incidents, resources, alerts, user, onUpda
   const handleSOS = () => {
     setIsSOSBroadcasting(true);
     playEmergencySiren();
+
+    const sosIncident: Incident = {
+      id: `i-sos-${Date.now()}`,
+      type: 'Critical Panic SOS',
+      severity: IncidentSeverity.SOS,
+      description: `CRITICAL EMERGENCY SOS broadcast by ${user.name} at coordinates (${user.location?.lat.toFixed(4)}, ${user.location?.lng.toFixed(4)})`,
+      latitude: user.location?.lat || 19.0760,
+      longitude: user.location?.lng || 72.8777,
+      status: IncidentStatus.PENDING,
+      reportedBy: user.id,
+      createdAt: new Date(),
+    };
+
+    if (onAddIncident) {
+      onAddIncident(sosIncident);
+    }
+
     setTimeout(() => setIsSOSBroadcasting(false), 5000);
   };
+
 
 
   const speak = async (text: string) => {

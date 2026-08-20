@@ -262,13 +262,29 @@ function App() {
     );
   }
 
+  const triggerPanicSOS = () => {
+    if (!user) return;
+    const sosIncident: Incident = {
+      id: `i-sos-${Date.now()}`,
+      type: 'Critical Panic SOS',
+      severity: IncidentSeverity.SOS,
+      description: `CRITICAL EMERGENCY SOS broadcast by ${user.name} at coordinates (${(user.location?.lat || 19.0760).toFixed(4)}, ${(user.location?.lng || 72.8777).toFixed(4)})`,
+      latitude: user.location?.lat || 19.0760,
+      longitude: user.location?.lng || 72.8777,
+      status: IncidentStatus.PENDING,
+      reportedBy: user.id,
+      createdAt: new Date(),
+    };
+    addIncident(sosIncident);
+  };
+
   // ---------------------------------------------------------------------------
   // RENDER: MAIN APPLICATION LAYOUT & ROUTING
   // ---------------------------------------------------------------------------
   return (
     <HashRouter>
       <div className="flex h-screen overflow-hidden bg-slate-50 relative">
-        <Sidebar role={user.role} />
+        <Sidebar role={user.role} onTriggerSOS={triggerPanicSOS} />
         <div className="flex-1 flex flex-col min-w-0 bg-slate-50 overflow-y-auto custom-scrollbar">
           <Navbar 
             user={user} 
@@ -281,7 +297,8 @@ function App() {
           />
           <main className="flex-1 p-4 md:p-6 lg:p-10">
             <Routes>
-              <Route path="/" element={<Dashboard incidents={incidents} resources={resources} alerts={alerts} user={user} onUpdateIncidentStatus={handleUpdateIncidentStatus} language={language} />} />
+              <Route path="/" element={<Dashboard incidents={incidents} resources={resources} alerts={alerts} user={user} onUpdateIncidentStatus={handleUpdateIncidentStatus} onAddIncident={addIncident} language={language} />} />
+
               <Route path="/chat" element={<CommunityChat user={user} messages={messages} onSendMessage={handleSendMessage} language={language} incidents={incidents} />} />
               <Route path="/helplines" element={<HelplineNumbers />} />
               <Route path="/report" element={<IncidentReport onReport={addIncident} user={user} language={language} />} />
