@@ -1,16 +1,25 @@
+# ResqNet - Community Crisis & Resource Platform
 
+ResqNet is a high-performance, real-time crisis management ecosystem designed to bridge the gap between citizens, volunteers, and authorities during humanitarian emergencies.
+
+## Features & Stack
+- **Frontend**: React 19 + TypeScript + Vite + Tailwind CSS + Leaflet.js + OpenStreetMap
+- **Backend**: Django REST Framework + PostgreSQL Support + SQLite Local Fallback
+- **AI Intelligence**: Google Gemini 3 Flash / 3 Pro / TTS audio voice assistance
+- **Role-Based Access Control**: Tailored workflows for Citizens, Volunteers, and Authorities
 
 ## Run Locally
 
-**Prerequisites:**  Node.js
+### 1. Launch Django Backend
+```bash
+python backend/manage.py migrate
+python backend/manage.py seed_db
+python backend/manage.py runserver 8000
+```
 
-
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
-=======
-# ResqNet
-ResqNet is a high-performance, real-time crisis management ecosystem designed to bridge the gap between citizens, volunteers, and authorities during humanitarian emergencies.
-
+### 2. Launch React Frontend
+```bash
+npm install
+npm run dev
+```
+- Open `http://localhost:3000/` in your browser.

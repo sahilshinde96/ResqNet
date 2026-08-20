@@ -18,9 +18,19 @@ const Navbar: React.FC<Props> = ({ user, alertsCount, onLogout, language, onLang
       <div className="flex items-center gap-3">
         <h1 className="md:hidden text-xl font-black text-red-600">RN</h1>
         <div className="hidden md:block">
-          <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Operator</span>
-          <p className="font-bold text-slate-800 leading-none">{user.name}</p>
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Operator</span>
+            <span className={`px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest ${
+              user.role === 'authority' ? 'bg-red-600 text-white shadow-sm shadow-red-200' :
+              user.role === 'volunteer' ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-200' :
+              'bg-blue-600 text-white'
+            }`}>
+              {user.role}
+            </span>
+          </div>
+          <p className="font-bold text-slate-800 leading-none mt-0.5">{user.name}</p>
         </div>
+
       </div>
 
       <div className="flex items-center gap-4">

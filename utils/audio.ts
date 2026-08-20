@@ -47,3 +47,40 @@ export const playSpeech = async (base64Audio: string) => {
   
   source.start(0);
 };
+
+/**
+ * Play a synthesized dual-tone Web Audio emergency siren.
+ */
+export const playEmergencySiren = () => {
+  try {
+    const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContextClass) return;
+    const ctx = new AudioContextClass();
+    
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    
+    osc.type = 'sawtooth';
+    
+    // Alternating siren pitch modulation (800Hz -> 1000Hz -> 800Hz)
+    const now = ctx.currentTime;
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.3);
+    osc.frequency.exponentialRampToValueAtTime(800, now + 0.6);
+    osc.frequency.exponentialRampToValueAtTime(1200, now + 0.9);
+    osc.frequency.exponentialRampToValueAtTime(800, now + 1.2);
+    
+    // Fade out volume smoothly
+    gain.gain.setValueAtTime(0.3, now);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 1.4);
+    
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    
+    osc.start(now);
+    osc.stop(now + 1.4);
+  } catch (err) {
+    console.warn("Emergency siren audio playback restricted:", err);
+  }
+};
+

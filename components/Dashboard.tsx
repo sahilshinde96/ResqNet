@@ -3,7 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { Incident, Resource, Alert, User, UserRole, IncidentSeverity, IncidentStatus, Language, ResourceType } from '../types';
 import { getSeverityColor } from '../utils/geo';
 import { translateBatch, generateSpeech } from '../geminiService';
-import { playSpeech } from '../utils/audio';
+import { playSpeech, playEmergencySiren } from '../utils/audio';
+import CrisisMap from './CrisisMap';
+
+
 
 interface Props {
   incidents: Incident[];
@@ -102,8 +105,10 @@ const Dashboard: React.FC<Props> = ({ incidents, resources, alerts, user, onUpda
 
   const handleSOS = () => {
     setIsSOSBroadcasting(true);
+    playEmergencySiren();
     setTimeout(() => setIsSOSBroadcasting(false), 5000);
   };
+
 
   const speak = async (text: string) => {
     const audio = await generateSpeech(text);
@@ -156,6 +161,16 @@ const Dashboard: React.FC<Props> = ({ incidents, resources, alerts, user, onUpda
         </div>
         
         <div className="flex items-center gap-4">
+          {user.role === UserRole.CITIZEN && (
+            <button 
+              onClick={() => alert("✅ Your safety status 'SAFE' has been registered and broadcast to local responders.")}
+              className="px-5 py-3 rounded-2xl font-black text-xs uppercase tracking-widest bg-green-600 hover:bg-green-700 text-white shadow-lg shadow-green-100 transition flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
+              Mark Myself Safe
+            </button>
+          )}
+
           <button 
             onClick={handleSOS}
             className={`px-8 py-3 rounded-2xl font-black text-xs uppercase tracking-widest transition-all duration-300 ${
@@ -170,6 +185,7 @@ const Dashboard: React.FC<Props> = ({ incidents, resources, alerts, user, onUpda
             <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Global Sync Active</span>
           </div>
         </div>
+
       </header>
 
       {isTranslating && (
@@ -204,54 +220,14 @@ const Dashboard: React.FC<Props> = ({ incidents, resources, alerts, user, onUpda
                 </div>
              </div>
           </div>
-          <div className="relative h-[450px] bg-slate-50 rounded-2xl m-2 border border-slate-100 overflow-hidden">
-             <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#000 2px, transparent 2px)', backgroundSize: '32px 32px' }}></div>
-             
-             {activeIncidents.map(inc => (
-                <div 
-                  key={inc.id} 
-                  className="absolute transition-all hover:scale-125 cursor-pointer z-20 group" 
-                  style={{ top: `${((inc.latitude - 34.05) * 5000 + 40)}%`, left: `${((inc.longitude + 118.24) * 5000 + 50)}%` }}
-                >
-                   <div className={`w-8 h-8 rounded-full border-2 border-white shadow-xl flex items-center justify-center text-sm ${
-                     inc.severity === 'sos' ? 'bg-red-600 animate-bounce ring-4 ring-red-500/30' : 
-                     inc.severity === 'high' ? 'bg-orange-600 shadow-orange-200' : 'bg-yellow-500'
-                   }`}>
-                      {getIconForTranslated(inc.id)}
-                   </div>
-                </div>
-             ))}
-
-             {resources.map(res => (
-                <div 
-                  key={res.id} 
-                  className="absolute transition-all hover:scale-110 cursor-pointer z-10 group" 
-                  style={{ top: `${((res.latitude - 34.05) * 5000 + 45)}%`, left: `${((res.longitude + 118.24) * 5000 + 45)}%` }}
-                >
-                   <div className={`w-6 h-6 rounded-lg border-2 border-white shadow-lg flex items-center justify-center text-xs ${getResourceColor(res.type)}`}>
-                      {getResourceIcon(res.type)}
-                   </div>
-                </div>
-             ))}
-
-             <div className="absolute bottom-4 right-4 bg-white/95 backdrop-blur-md p-3 rounded-2xl border border-slate-200 shadow-xl z-30 max-w-[200px]">
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2 border-b border-slate-100 pb-1">Map Legend</p>
-                <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-                   <div className="flex items-center gap-1.5">
-                      <span className="text-xs">🔥</span> <span className="text-[8px] font-bold text-slate-600 uppercase">Fire</span>
-                   </div>
-                   <div className="flex items-center gap-1.5">
-                      <span className="text-xs">🌊</span> <span className="text-[8px] font-bold text-slate-600 uppercase">Flood</span>
-                   </div>
-                   <div className="flex items-center gap-1.5">
-                      <span className="text-xs">💊</span> <span className="text-[8px] font-bold text-slate-600 uppercase">Med Supply</span>
-                   </div>
-                   <div className="flex items-center gap-1.5">
-                      <span className="text-xs">🏠</span> <span className="text-[8px] font-bold text-slate-600 uppercase">Shelter</span>
-                   </div>
-                </div>
-             </div>
+          <div className="relative h-[480px] rounded-2xl m-2 border border-slate-100 overflow-hidden">
+             <CrisisMap 
+               incidents={translatedIncidents} 
+               resources={resources} 
+               userLocation={user.location} 
+             />
           </div>
+
         </div>
 
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 flex flex-col h-full">
@@ -298,12 +274,40 @@ const Dashboard: React.FC<Props> = ({ incidents, resources, alerts, user, onUpda
                  </div>
                  <p className="text-xs text-slate-500 mt-1 line-clamp-1 italic">{inc.description}</p>
                </div>
-               <div className="text-right">
-                  <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border ${getSeverityColor(inc.severity)}`}>
-                    {inc.severity}
-                  </span>
-                  <p className="text-[9px] text-slate-400 mt-1 font-bold">{new Date(inc.createdAt).toLocaleTimeString()}</p>
+               <div className="text-right flex flex-col items-end gap-1">
+                  <div className="flex items-center gap-2">
+                     <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase border ${getSeverityColor(inc.severity)}`}>
+                       {inc.severity}
+                     </span>
+                     <span className="text-[10px] font-black uppercase text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                       {inc.status}
+                     </span>
+                  </div>
+
+                  {user.role === UserRole.AUTHORITY && (
+                    <select
+                      value={inc.status}
+                      onChange={(e) => onUpdateIncidentStatus(inc.id, e.target.value as IncidentStatus)}
+                      className="text-[9px] font-black uppercase bg-slate-900 text-white rounded px-2 py-1 outline-none cursor-pointer mt-1"
+                    >
+                      <option value={IncidentStatus.PENDING}>Set Pending</option>
+                      <option value={IncidentStatus.IN_PROGRESS}>Set In Progress</option>
+                      <option value={IncidentStatus.RESOLVED}>Set Resolved</option>
+                    </select>
+                  )}
+
+                  {user.role === UserRole.VOLUNTEER && inc.status === IncidentStatus.PENDING && (
+                    <button
+                      onClick={() => onUpdateIncidentStatus(inc.id, IncidentStatus.IN_PROGRESS)}
+                      className="text-[9px] font-black uppercase bg-indigo-600 hover:bg-indigo-700 text-white rounded px-3 py-1 transition mt-1"
+                    >
+                      Claim Response
+                    </button>
+                  )}
+
+                  <p className="text-[9px] text-slate-400 font-bold">{new Date(inc.createdAt).toLocaleTimeString()}</p>
                </div>
+
             </div>
           ))}
         </div>

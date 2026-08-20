@@ -20,16 +20,28 @@ const SafetyInfo: React.FC<Props> = ({ language }) => {
   const [tips, setTips] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const DEFAULT_SAFETY_TIPS: Record<string, string> = {
+    fire: "1. Stay low beneath smoke level and cover mouth with damp cloth.\n2. Feel doors for heat with back of hand before opening.\n3. Never use elevators during a fire building evacuation.\n4. Call emergency fire services immediately once in safe zone.",
+    flood: "1. Move immediately to higher ground or upper floors of sturdy structures.\n2. Avoid walking or driving through moving flood waters.\n3. Disconnect main electrical power supply if safe to do so.\n4. Store drinking water in clean sealed containers.",
+    earthquake: "1. DROP, COVER, and HOLD ON under sturdy table or desk.\n2. Stay away from glass windows, unanchored heavy furniture, and exterior walls.\n3. If outdoors, move to open area clear of buildings, trees, and power lines.",
+    medical: "1. Apply firm direct pressure to severe bleeding wounds using clean cloth.\n2. Check for responsiveness and clear breathing airway.\n3. Keep casualty warm and still while emergency medical care is en route.",
+    kit: "1. 3-day supply of non-perishable food & 3 liters drinking water per person.\n2. Battery-powered flashlight, extra batteries, and portable power bank.\n3. First aid manual, basic medication, emergency whistle, and foil blanket."
+  };
+
   useEffect(() => {
     const fetchTips = async () => {
       setLoading(true);
-      // Fix: Pass language to the service
       const res = await getGeneralSafetyTips(selected.label, language);
-      setTips(res);
+      if (!res || res === "Tips unavailable.") {
+        setTips(DEFAULT_SAFETY_TIPS[selected.id] || "Emergency protocols active.");
+      } else {
+        setTips(res);
+      }
       setLoading(false);
     };
     fetchTips();
   }, [selected, language]);
+
 
   return (
     <div className="max-w-6xl mx-auto animate-fadeIn space-y-8">
